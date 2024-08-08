@@ -85,7 +85,7 @@ static bool run_loop(FILES *files)
 
 static void next_photo(void)
 {
-    TRANSITION_TYPE transition_type = TRANSITION_SLIDE_LEFT;
+    TRANSITION_TYPE transition_type = get_random_transition();
 
     if (transition_type != TRANSITION_NONE)
     {
