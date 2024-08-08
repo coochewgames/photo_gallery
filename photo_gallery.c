@@ -1,21 +1,24 @@
 #include <raylib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include <transition_handler.h>
 
 #include "photo_gallery.h"
 #include "photo_db.h"
+#include "set_config.h"
 
 #define DEFAULT_SCREEN_WIDTH 800
 #define DEFAULT_SCREEN_HEIGHT 600
 
 
-Texture2D display_photo;
-DISPLAY_TYPE display_type = DISPLAY_FIXED_RATIO;
-GET_TYPE get_type = GET_RANDOM_PHOTO;
-double display_time = 10.0;
-double last_display_time = 0.0f;
+static Texture2D display_photo;
+static DISPLAY_TYPE display_type = DISPLAY_FIXED_RATIO;
+static GET_TYPE get_type = GET_RANDOM_PHOTO;
+static double display_time = 10.0;
+static double last_display_time = 0.0f;
+static char initial_dir[PATH_MAX_LEN];
 
 static void init_raylib(void);
 static bool run_loop(FILES *files);
@@ -26,13 +29,51 @@ static void render_photo(void);
 
 int main(int argc, char *argv[])
 {
-    char *initial_dir = (argc > 1) ? argv[1] : ".";
+    read_config_file();
+
+    if (strlen(initial_dir) == 0)
+    {
+        if (argc > 1)
+        {
+            set_initial_dir(argv[1]);
+        }
+        else
+        {
+            set_initial_dir(".");
+        }
+    }
     FILES files = build_photo_db(initial_dir);
+
+    if (files.file_count == 0)
+    {
+        printf("Unable to locate photos in %s\nExiting...\n", initial_dir);
+        return 1;
+    }
 
     init_raylib();
 
     while(run_loop(&files));
     return 0;
+}
+
+void set_display_type(DISPLAY_TYPE type)
+{
+    display_type = type;
+}
+
+void set_display_time(double time)
+{
+    display_time = time;
+}
+
+void set_get_type(GET_TYPE type)
+{
+    get_type = type;
+}
+
+void set_initial_dir(char *dir)
+{
+    strncpy(initial_dir, dir, PATH_MAX_LEN);
 }
 
 static void init_raylib(void)
@@ -70,6 +111,7 @@ static bool run_loop(FILES *files)
                 break;
 
             case GET_SEQUENTIAL_PHOTO:
+            default:
                 file = get_next_path_name(files);
                 break;
         }
@@ -152,6 +194,7 @@ static void render_photo(void)
             break;
 
         case DISPLAY_FIXED_RATIO:
+        default:
         {
             float width_var = dest_width / (float)display_photo.width;
             float height_var = dest_height / (float)display_photo.height;

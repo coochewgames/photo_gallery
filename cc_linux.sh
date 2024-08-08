@@ -1,1 +1,1 @@
-clang -g -o photo_gallery -std=c99 photo_gallery.c photo_db.c ../scene_handler/scene_handler.c ../scene_handler/transition_handler.c -I../raylib/src/ -I../scene_handler -L../raylib/src/ -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+clang -g -o photo_gallery -std=c99 photo_gallery.c photo_db.c set_config.c ../scene_handler/scene_handler.c ../scene_handler/transition_handler.c -I../raylib/src/ -I../scene_handler -L../raylib/src/ -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
