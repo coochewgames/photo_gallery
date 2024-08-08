@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <dirent.h>
 #include <sys/stat.h>
 
@@ -11,7 +12,8 @@ static int file_inc = 100;
 
 static void search_photos(FILES *files, const char *dir_path);
 static void add_path_name_to_files(FILES *files, const char *path_name);
-
+static const char *get_filename_ext(const char *file_name);
+static int is_ext_image(const char *ext);
 
 
 FILES build_photo_db(const char *dir_path)
@@ -46,7 +48,10 @@ static void search_photos(FILES *files, const char *dir_path)
 
         if (S_ISREG(path_stat.st_mode))
         {
-            add_path_name_to_files(files, new_path_name);
+            if (is_ext_image(get_filename_ext(new_path_name)))
+            {
+                add_path_name_to_files(files, new_path_name);
+            }
         }
         else if (S_ISDIR(path_stat.st_mode))
         {
@@ -88,4 +93,46 @@ static void add_path_name_to_files(FILES *files, const char *path_name)
     *(files->files + files->file_count) = (char *)malloc(strlen(path_name));
     memcpy(*(files->files + files->file_count), path_name, strlen(path_name));
     files->file_count++;
+}
+
+static const char *get_filename_ext(const char *file_name)
+{
+    const char *dot = strrchr(file_name, '.');
+
+    if (dot == NULL || dot == file_name)
+    {
+        return NULL;
+    }
+
+    return(dot + 1);
+}
+
+static int is_ext_image(const char *ext)
+{
+    char *lc_ext;
+    int is_image = 0;
+
+
+    if (ext == NULL)
+    {
+        return is_image;
+    }
+
+    lc_ext = malloc(strlen(ext) + 1);
+
+    for(int i = 0; ext[i] != '\0'; i++)
+    {
+        lc_ext[i] = tolower(ext[i]);
+    }
+
+    if (strcmp(lc_ext, "png") == 0 ||
+        strcmp(lc_ext, "jpg") == 0 ||
+        strcmp(lc_ext, "jpeg") == 0 ||
+        strcmp(lc_ext, "bmp") == 0)
+    {
+        is_image = 1;
+    }
+
+    free(lc_ext);
+    return is_image;
 }
