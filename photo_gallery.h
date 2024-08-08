@@ -11,4 +11,10 @@ typedef enum
     DISPLAY_FIXED_RATIO
 } DISPLAY_TYPE;
 
+typedef enum
+{
+    GET_RANDOM_PHOTO,
+    GET_SEQUENTIAL_PHOTO
+} GET_TYPE;
+
 #endif

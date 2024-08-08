@@ -13,10 +13,12 @@
 
 Texture2D display_photo;
 DISPLAY_TYPE display_type = DISPLAY_FIXED_RATIO;
+GET_TYPE get_type = GET_RANDOM_PHOTO;
+double display_time = 10.0;
+double last_display_time = 0.0f;
 
 static void init_raylib(void);
 static bool run_loop(FILES *files);
-static void set_random_photo(FILES *files);
 static void next_photo(void);
 static bool show_photo(void);
 static void render_photo(void);
@@ -35,6 +37,7 @@ int main(int argc, char *argv[])
 
 static void init_raylib(void)
 {
+    SetTraceLogLevel(LOG_ERROR);
     InitWindow(DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT, "Photo Gallery");
 
     int monitor = GetCurrentMonitor();
@@ -48,26 +51,36 @@ static void init_raylib(void)
 
 static bool run_loop(FILES *files)
 {
-    if (files->current_selection == NO_VALUE)
-    {
-        set_random_photo(files);
-        next_photo();
-    }
-
     if (is_transition_active())
     {
         run_transition();
         return true;
     }
 
+    if (files->current_selection == NO_VALUE || (GetTime() - last_display_time) > display_time)
+    {
+        char *file;
+
+        UnloadTexture(display_photo);
+
+        switch(get_type)
+        {
+            case GET_RANDOM_PHOTO:
+                file = get_random_path_name(files);
+                break;
+
+            case GET_SEQUENTIAL_PHOTO:
+                file = get_next_path_name(files);
+                break;
+        }
+
+        display_photo = LoadTexture(file);
+        next_photo();
+
+        last_display_time = GetTime();
+    }
+
     return show_photo();
-}
-
-static void set_random_photo(FILES *files)
-{
-    char *file = get_random_path_name(files);
-
-    display_photo = LoadTexture(file);
 }
 
 static void next_photo(void)
