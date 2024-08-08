@@ -12,7 +12,7 @@
 
 
 Texture2D display_photo;
-DISPLAY_TYPE display_type = DISPLAY_FIXED_RATIO;
+DISPLAY_TYPE display_type = DISPLAY_NO_SCALE_CENTRE_X;
 
 static void init_raylib(void);
 static bool run_loop(FILES *files);
@@ -40,13 +40,36 @@ int main(int argc, char *argv[])
 void render_photo(void)
 {
     int monitor = GetCurrentMonitor();
-    float dest_width = (float)GetMonitorWidth(monitor);
-    float dest_height = (float)GetMonitorHeight(monitor);
+    float screen_width = (float)GetMonitorWidth(monitor);
+    float screen_height = (float)GetMonitorHeight(monitor);
+    float dest_width = screen_width;
+    float dest_height = screen_height;
     float dest_x = 0.0;
     float dest_y = 0.0;
 
     switch(display_type)
     {
+        case DISPLAY_NO_SCALE:
+        case DISPLAY_NO_SCALE_CENTRE:
+        case DISPLAY_NO_SCALE_CENTRE_X:
+        case DISPLAY_NO_SCALE_CENTRE_Y:
+            dest_width = (float)display_photo.width;
+            dest_height = (float)display_photo.height;
+
+            if (display_type == DISPLAY_NO_SCALE_CENTRE ||
+                display_type == DISPLAY_NO_SCALE_CENTRE_X)
+            {
+                dest_x = (screen_width - dest_width) / 2.0f;
+            }
+
+            if (display_type == DISPLAY_NO_SCALE_CENTRE ||
+                display_type == DISPLAY_NO_SCALE_CENTRE_Y)
+            {
+                dest_y = (screen_height - dest_height) / 2.0f;
+            }
+
+            break;
+
         case DISPLAY_STRETCH:
             break;
 
@@ -57,17 +80,13 @@ void render_photo(void)
 
             if (width_var < height_var)
             {
-                float full_height = dest_height;
-
                 dest_height = display_photo.height * width_var;
-                dest_y = (full_height - dest_height) / 2.0f;
+                dest_y = (screen_height - dest_height) / 2.0f;
             }
             else
             {
-                float full_width = dest_width;
-
                 dest_width = display_photo.width * height_var;
-                dest_x = (full_width - dest_width) / 2.0f;
+                dest_x = (screen_width - dest_width) / 2.0f;
             }
 
             break;
