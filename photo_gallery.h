@@ -1,0 +1,11 @@
+#ifndef PHOTO_GALLERY_H
+#define PHOTO_GALLERY_H
+
+typedef enum
+{
+    DISPLAY_NO_SCALE,
+    DISPLAY_STRETCH,
+    DISPLAY_FIXED_RATIO
+} DISPLAY_TYPE;
+
+#endif

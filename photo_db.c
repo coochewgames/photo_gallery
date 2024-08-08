@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <time.h>
 
 #include "photo_db.h"
 
@@ -18,7 +19,8 @@ static int is_ext_image(const char *ext);
 
 FILES build_photo_db(const char *dir_path)
 {
-    FILES files = { NULL, 0 };
+    FILES files = { NULL, 0, NO_VALUE };
+    srand((unsigned int)time(NULL));
 
     search_photos(&files, dir_path);
     return(files);
@@ -66,6 +68,29 @@ static void search_photos(FILES *files, const char *dir_path)
     }
 
     closedir(dir);
+}
+
+char *get_random_path_name(FILES *files)
+{
+    int new_selection = rand() % files->file_count;
+
+    if (new_selection == files->current_selection)
+    {
+        return get_next_path_name(files);
+    }
+
+    files->current_selection = new_selection;
+    return files->files[files->current_selection];
+}
+
+char *get_next_path_name(FILES *files)
+{
+    if (++files->current_selection >= files->file_count)
+    {
+        files->current_selection = 0;
+    }
+
+    return files->files[files->current_selection];
 }
 
 static void add_path_name_to_files(FILES *files, const char *path_name)
@@ -119,6 +144,7 @@ static int is_ext_image(const char *ext)
     }
 
     lc_ext = malloc(strlen(ext) + 1);
+    memset(lc_ext, 0, strlen(ext) + 1);
 
     for(int i = 0; ext[i] != '\0'; i++)
     {
