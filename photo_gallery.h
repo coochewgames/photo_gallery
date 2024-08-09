@@ -23,5 +23,6 @@ void set_display_type(DISPLAY_TYPE type);
 void set_display_time(double time);
 void set_get_type(GET_TYPE type);
 void set_initial_dir(char *dir);
+void show_message(const char *message);
 
 #endif

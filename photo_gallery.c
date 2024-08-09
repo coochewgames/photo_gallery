@@ -29,6 +29,8 @@ static void render_photo(void);
 
 int main(int argc, char *argv[])
 {
+    FILES files;
+
     read_config_file();
 
     if (strlen(initial_dir) == 0)
@@ -42,15 +44,15 @@ int main(int argc, char *argv[])
             set_initial_dir(".");
         }
     }
-    FILES files = build_photo_db(initial_dir);
+
+    init_raylib();
+    files = build_photo_db(initial_dir);
 
     if (files.file_count == 0)
     {
         printf("Unable to locate photos in %s\nExiting...\n", initial_dir);
         return 1;
     }
-
-    init_raylib();
 
     while(run_loop(&files));
     return 0;
@@ -74,6 +76,14 @@ void set_get_type(GET_TYPE type)
 void set_initial_dir(char *dir)
 {
     strncpy(initial_dir, dir, PATH_MAX_LEN);
+}
+
+void show_message(const char *message)
+{
+    BeginDrawing();
+        ClearBackground(BLACK);
+        DrawText(message, 0, 0, 18, GREEN); 
+    EndDrawing();
 }
 
 static void init_raylib(void)

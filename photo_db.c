@@ -7,6 +7,7 @@
 #include <time.h>
 
 #include "photo_db.h"
+#include "photo_gallery.h"
 
 static int file_limit = 0;
 static int file_inc = 100;
@@ -62,6 +63,10 @@ static void search_photos(FILES *files, const char *dir_path)
             {
                 continue;
             }
+
+            char message[128];
+            snprintf(message, 128, "New directory found: %s", new_path_name);
+            show_message(message);
 
             search_photos(files, new_path_name);
         }
