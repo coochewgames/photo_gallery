@@ -120,7 +120,7 @@ static void add_path_name_to_files(FILES *files, const char *path_name)
         file_limit += file_limit;
     }
 
-    *(files->files + files->file_count) = (char *)malloc(strlen(path_name));
+    *(files->files + files->file_count) = (char *)malloc(strlen(path_name) + 1);
     memcpy(*(files->files + files->file_count), path_name, strlen(path_name));
     files->file_count++;
 }

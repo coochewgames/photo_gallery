@@ -13,17 +13,20 @@
 #define DEFAULT_SCREEN_HEIGHT 600
 
 
-static Texture2D display_photo;
 static DISPLAY_TYPE display_type = DISPLAY_FIXED_RATIO;
 static int display_width = DEFAULT_SCREEN_WIDTH;
 static int display_height = DEFAULT_SCREEN_HEIGHT;
 static GET_TYPE get_type = GET_RANDOM_PHOTO;
 static double display_time = 10.0;
+static int num_attempts_to_find_valid_photo = 5;
+
+static Texture2D display_photo;
 static double last_display_time = 0.0f;
 static char initial_dir[PATH_MAX_LEN];
 
 static void init_raylib(void);
 static bool run_loop(FILES *files);
+static bool load_photo(FILES *files);
 static void next_photo(void);
 static bool show_photo(void);
 static void render_photo(void);
@@ -119,9 +122,32 @@ static bool run_loop(FILES *files)
 
     if (files->current_selection == NO_VALUE || (GetTime() - last_display_time) > display_time)
     {
-        char *file;
-
         UnloadTexture(display_photo);
+
+        if (load_photo(files) == true)
+        {
+            next_photo();
+
+            last_display_time = GetTime();
+        }
+        else
+        {
+            //  Unable to load photo
+            return false;
+        }
+    }
+
+    return show_photo();
+}
+
+static bool load_photo(FILES *files)
+{
+    int num_attempts = 0;
+    bool photo_loaded = false;
+
+    do
+    {
+        char *file;
 
         switch(get_type)
         {
@@ -136,12 +162,18 @@ static bool run_loop(FILES *files)
         }
 
         display_photo = LoadTexture(file);
-        next_photo();
 
-        last_display_time = GetTime();
-    }
-
-    return show_photo();
+        if (display_photo.id > 0)
+        {
+            photo_loaded = true;
+        }
+        else
+        {
+            num_attempts++;
+        }
+    } while (photo_loaded == false && num_attempts < num_attempts_to_find_valid_photo);
+    
+    return photo_loaded;
 }
 
 static void next_photo(void)
