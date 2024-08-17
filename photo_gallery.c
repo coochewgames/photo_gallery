@@ -15,6 +15,8 @@
 
 static Texture2D display_photo;
 static DISPLAY_TYPE display_type = DISPLAY_FIXED_RATIO;
+static int display_width = DEFAULT_SCREEN_WIDTH;
+static int display_height = DEFAULT_SCREEN_HEIGHT;
 static GET_TYPE get_type = GET_RANDOM_PHOTO;
 static double display_time = 10.0;
 static double last_display_time = 0.0f;
@@ -63,9 +65,24 @@ void set_display_type(DISPLAY_TYPE type)
     display_type = type;
 }
 
+void set_display_width(int width)
+{
+    display_width = width;
+}
+
+void set_display_height(int height)
+{
+    display_height = height;
+}
+
 void set_display_time(double time)
 {
     display_time = time;
+}
+
+void set_gallery_transition_duration(double duration)
+{
+    set_transition_duration((float)duration);
 }
 
 void set_get_type(GET_TYPE type)
@@ -89,15 +106,7 @@ void show_message(const char *message)
 static void init_raylib(void)
 {
     SetTraceLogLevel(LOG_ERROR);
-    InitWindow(DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT, "Photo Gallery");
-
-    int monitor = GetCurrentMonitor();
-    int x = GetMonitorWidth(monitor);
-    int y = GetMonitorHeight(monitor);
-    int hz = GetMonitorRefreshRate(monitor);
-
-    SetWindowSize(x, y);
-    SetTargetFPS(hz);
+    InitWindow(display_width, display_height, "Photo Gallery");
 }
 
 static bool run_loop(FILES *files)
@@ -169,11 +178,8 @@ static bool show_photo(void)
 
 static void render_photo(void)
 {
-    int monitor = GetCurrentMonitor();
-    float screen_width = (float)GetMonitorWidth(monitor);
-    float screen_height = (float)GetMonitorHeight(monitor);
-    float dest_width = screen_width;
-    float dest_height = screen_height;
+    float dest_width = display_width;
+    float dest_height = display_height;
     float dest_x = 0.0;
     float dest_y = 0.0;
 
@@ -189,13 +195,13 @@ static void render_photo(void)
             if (display_type == DISPLAY_NO_SCALE_CENTRE ||
                 display_type == DISPLAY_NO_SCALE_CENTRE_X)
             {
-                dest_x = (screen_width - dest_width) / 2.0f;
+                dest_x = (display_width - dest_width) / 2.0f;
             }
 
             if (display_type == DISPLAY_NO_SCALE_CENTRE ||
                 display_type == DISPLAY_NO_SCALE_CENTRE_Y)
             {
-                dest_y = (screen_height - dest_height) / 2.0f;
+                dest_y = (display_height - dest_height) / 2.0f;
             }
 
             break;
@@ -212,12 +218,12 @@ static void render_photo(void)
             if (width_var < height_var)
             {
                 dest_height = display_photo.height * width_var;
-                dest_y = (screen_height - dest_height) / 2.0f;
+                dest_y = (display_height - dest_height) / 2.0f;
             }
             else
             {
                 dest_width = display_photo.width * height_var;
-                dest_x = (screen_width - dest_width) / 2.0f;
+                dest_x = (display_width - dest_width) / 2.0f;
             }
 
             break;

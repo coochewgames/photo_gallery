@@ -8,7 +8,10 @@
 #define MAX_LINE_LEN 256
 
 static void set_config_display_type(char *type_value);
+static void set_config_display_width(char *width_value);
+static void set_config_display_height(char *height_value);
 static void set_config_display_time(char *time_value);
+static void set_config_transition_duration(char *duration_value);
 static void set_config_get_type(char *type_value);
 static void set_config_initial_dir(char *dir_value);
 
@@ -37,9 +40,21 @@ void read_config_file(void)
         {
             set_config_display_type(value);
         }
+        else if (strcmp(key, "display_width") == 0)
+        {
+            set_config_display_width(value);
+        }
+        else if (strcmp(key, "display_height") == 0)
+        {
+            set_config_display_height(value);
+        }
         else if (strcmp(key, "display_time") == 0)
         {
             set_config_display_time(value);
+        }
+        else if (strcmp(key, "transition_duration") == 0)
+        {
+            set_config_transition_duration(value);
         }
         else if (strcmp(key, "get_type") == 0)
         {
@@ -82,6 +97,26 @@ static void set_config_display_type(char *type_value)
     }
 }
 
+static void set_config_display_width(char *width_value)
+{
+    int width = atoi(width_value);
+
+    if (width > 0)
+    {
+        set_display_width(width);
+    }
+}
+
+static void set_config_display_height(char *height_value)
+{
+    int height = atoi(height_value);
+
+    if (height > 0)
+    {
+        set_display_height(height);
+    }
+}
+
 static void set_config_display_time(char *time_value)
 {
     double time = strtod(time_value, NULL);
@@ -89,6 +124,16 @@ static void set_config_display_time(char *time_value)
     if (time > 0.0)
     {
         set_display_time(time);
+    }
+}
+
+static void set_config_transition_duration(char *duration_value)
+{
+    double duration = strtod(duration_value, NULL);
+
+    if (duration > 0.0)
+    {
+        set_gallery_transition_duration(duration);
     }
 }
 
