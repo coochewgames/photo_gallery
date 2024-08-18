@@ -108,7 +108,7 @@ static void add_path_name_to_files(FILES *files, const char *path_name)
         }
         else
         {
-            files->files = realloc(files->files, file_inc * sizeof(char *));
+            files->files = realloc(files->files, (file_limit + file_inc) * sizeof(char *));
         }
 
         if (files->files == NULL)
@@ -117,7 +117,7 @@ static void add_path_name_to_files(FILES *files, const char *path_name)
             return;
         }
 
-        file_limit += file_limit;
+        file_limit += file_inc;
     }
 
     *(files->files + files->file_count) = (char *)malloc(strlen(path_name) + 1);
