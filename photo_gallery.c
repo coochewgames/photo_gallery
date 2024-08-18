@@ -123,18 +123,15 @@ static bool run_loop(FILES *files)
     if (files->current_selection == NO_VALUE || (GetTime() - last_display_time) > display_time)
     {
         UnloadTexture(display_photo);
+        bool photo_loaded = load_photo(files);
 
-        if (load_photo(files) == true)
+        if (photo_loaded == true)
         {
             next_photo();
-
             last_display_time = GetTime();
         }
-        else
-        {
-            //  Unable to load photo
-            return false;
-        }
+
+        return photo_loaded;
     }
 
     return show_photo();
