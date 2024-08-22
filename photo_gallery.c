@@ -275,7 +275,7 @@ static void render_photo(void)
         case DISPLAY_FIXED_RATIO:
         default:
         {
-            if (display_photo.width < display_photo.height)
+            if (display_photo.height < display_height)
             {
                 dest_y = (display_height - display_photo.height) / 2.0f;
             }
