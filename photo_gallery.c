@@ -36,6 +36,7 @@ static void *load_image(void *pfiles);
 static void next_photo(void);
 static bool show_photo(void);
 static void render_photo(void);
+static void scale_image(Image *image);
 
 
 int main(int argc, char *argv[])
@@ -193,7 +194,7 @@ static void *load_image(void *pfiles)
         {
             double start = GetTime();
             TraceLog(LOG_DEBUG, "Starting resize...");
-            ImageResize(&image, display_width, display_height);
+            scale_image(&image);
             TraceLog(LOG_DEBUG, "Ending resize (%lf secs)", (GetTime() - start));
 
             scaled_image = image;
@@ -245,8 +246,6 @@ static bool show_photo(void)
 
 static void render_photo(void)
 {
-    float dest_width = display_width;
-    float dest_height = display_height;
     float dest_x = 0.0;
     float dest_y = 0.0;
 
@@ -256,19 +255,16 @@ static void render_photo(void)
         case DISPLAY_NO_SCALE_CENTRE:
         case DISPLAY_NO_SCALE_CENTRE_X:
         case DISPLAY_NO_SCALE_CENTRE_Y:
-            dest_width = (float)display_photo.width;
-            dest_height = (float)display_photo.height;
-
             if (display_type == DISPLAY_NO_SCALE_CENTRE ||
                 display_type == DISPLAY_NO_SCALE_CENTRE_X)
             {
-                dest_x = (display_width - dest_width) / 2.0f;
+                dest_x = (display_width - display_width) / 2.0f;
             }
 
             if (display_type == DISPLAY_NO_SCALE_CENTRE ||
                 display_type == DISPLAY_NO_SCALE_CENTRE_Y)
             {
-                dest_y = (display_height - dest_height) / 2.0f;
+                dest_y = (display_height - display_height) / 2.0f;
             }
 
             break;
@@ -279,27 +275,62 @@ static void render_photo(void)
         case DISPLAY_FIXED_RATIO:
         default:
         {
-            float width_var = dest_width / (float)display_photo.width;
-            float height_var = dest_height / (float)display_photo.height;
-
-            if (width_var < height_var)
+            if (display_photo.width < display_photo.height)
             {
-                dest_height = display_photo.height * width_var;
-                dest_y = (display_height - dest_height) / 2.0f;
+                dest_y = (display_height - display_photo.height) / 2.0f;
             }
             else
             {
-                dest_width = display_photo.width * height_var;
-                dest_x = (display_width - dest_width) / 2.0f;
+                dest_x = (display_width - display_photo.width) / 2.0f;
             }
 
             break;
         }
     }
 
-    Rectangle source_rect = { 0.0f, 0.0f, (float)display_photo.width, (float)display_photo.height};
-    Rectangle dest_rect = { dest_x, dest_y, dest_width, dest_height};
-
     ClearBackground(BLACK);
-    DrawTexturePro(display_photo, source_rect, dest_rect, (Vector2){ 0.0f, 0.0f }, 0.0f, WHITE);
+    DrawTexture(display_photo, dest_x, dest_y, WHITE);
+}
+
+static void scale_image(Image *image)
+{
+    float dest_width = display_width;
+    float dest_height = display_height;
+    bool resize_required = true;
+
+    switch(display_type)
+    {
+        case DISPLAY_NO_SCALE:
+        case DISPLAY_NO_SCALE_CENTRE:
+        case DISPLAY_NO_SCALE_CENTRE_X:
+        case DISPLAY_NO_SCALE_CENTRE_Y:
+            resize_required = false;
+            break;
+
+        case DISPLAY_STRETCH:
+            break;
+
+        case DISPLAY_FIXED_RATIO:
+        default:
+        {
+            float width_var = display_width / (float)image->width;
+            float height_var = display_height / (float)image->height;
+
+            if (width_var < height_var)
+            {
+                dest_height = image->height * width_var;
+            }
+            else
+            {
+                dest_width = image->width * height_var;
+            }
+
+            break;
+        }
+    }
+
+    if (resize_required == true)
+    {
+        ImageResize(image, dest_width, dest_height);
+    }
 }
