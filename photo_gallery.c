@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include <pthread.h>
 
 #include <transition_handler.h>
 
@@ -11,14 +12,19 @@
 
 #define DEFAULT_SCREEN_WIDTH 800
 #define DEFAULT_SCREEN_HEIGHT 600
+#define DEFAULT_DISPLAY_TIME 10
 
 
 static DISPLAY_TYPE display_type = DISPLAY_FIXED_RATIO;
 static int display_width = DEFAULT_SCREEN_WIDTH;
 static int display_height = DEFAULT_SCREEN_HEIGHT;
 static GET_TYPE get_type = GET_RANDOM_PHOTO;
-static double display_time = 10.0;
+static double display_time = DEFAULT_DISPLAY_TIME;
 static int num_attempts_to_find_valid_photo = 5;
+
+static bool is_loading_image = false;
+static bool is_next_image_loaded = false;
+static Image scaled_image;
 
 static Texture2D display_photo;
 static double last_display_time = 0.0f;
@@ -26,7 +32,7 @@ static char initial_dir[PATH_MAX_LEN];
 
 static void init_raylib(void);
 static bool run_loop(FILES *files);
-static bool load_photo(FILES *files);
+static void *load_image(void *pfiles);
 static void next_photo(void);
 static bool show_photo(void);
 static void render_photo(void);
@@ -55,7 +61,7 @@ int main(int argc, char *argv[])
 
     if (files.file_count == 0)
     {
-        printf("Unable to locate photos in %s\nExiting...\n", initial_dir);
+        TraceLog(LOG_ERROR, "Unable to locate photos in %s\nExiting...", initial_dir);
         return 1;
     }
 
@@ -108,39 +114,60 @@ void show_message(const char *message)
 
 static void init_raylib(void)
 {
-    SetTraceLogLevel(LOG_ERROR);
+    SetTraceLogLevel(LOG_INFO);
     InitWindow(display_width, display_height, "Photo Gallery");
 }
 
 static bool run_loop(FILES *files)
 {
+    static pthread_t thread_id;
+    static bool initial_run = true;
+
     if (is_transition_active())
     {
         run_transition();
         return true;
     }
 
-    if (files->current_selection == NO_VALUE || (GetTime() - last_display_time) > display_time)
+    if (is_next_image_loaded == false)
     {
-        UnloadTexture(display_photo);
-        bool photo_loaded = load_photo(files);
-
-        if (photo_loaded == true)
+        if (is_loading_image == false)
         {
-            next_photo();
-            last_display_time = GetTime();
+            pthread_create(&thread_id, NULL, load_image, files);
+            is_loading_image = true;
+        }
+    }
+
+    if (initial_run || (GetTime() - last_display_time) > display_time)
+    {
+        initial_run = false;
+
+        if (is_loading_image == true)
+        {
+            TraceLog(LOG_INFO, "Awaiting image loading...");
+            pthread_join(thread_id, NULL);
         }
 
-        return photo_loaded;
+        UnloadTexture(display_photo);
+        display_photo = LoadTextureFromImage(scaled_image);
+
+        next_photo();
+
+        is_next_image_loaded = false;
+        last_display_time = GetTime();
+
+        return true;
     }
 
     return show_photo();
 }
 
-static bool load_photo(FILES *files)
+static void *load_image(void *pfiles)
 {
+    FILES *files = (FILES *)pfiles;
     int num_attempts = 0;
-    bool photo_loaded = false;
+    bool image_loaded = false;
+    Image image = { NULL };
 
     do
     {
@@ -158,19 +185,30 @@ static bool load_photo(FILES *files)
                 break;
         }
 
-        display_photo = LoadTexture(file);
+        //  A texture can be limited by the GPU, so load in as an image and scale prior to loading
+        //  into the GPU as a texture.
+        image = LoadImage(file);
 
-        if (display_photo.id > 0)
+        if (image.data != NULL)
         {
-            photo_loaded = true;
+            double start = GetTime();
+            TraceLog(LOG_DEBUG, "Starting resize...");
+            ImageResize(&image, display_width, display_height);
+            TraceLog(LOG_DEBUG, "Ending resize (%lf secs)", (GetTime() - start));
+
+            scaled_image = image;
+            image_loaded = true;
         }
         else
         {
             num_attempts++;
         }
-    } while (photo_loaded == false && num_attempts < num_attempts_to_find_valid_photo);
-    
-    return photo_loaded;
+    } while (image_loaded == false && num_attempts < num_attempts_to_find_valid_photo);
+
+    is_next_image_loaded = true;
+    is_loading_image = false;
+
+    pthread_exit(NULL);
 }
 
 static void next_photo(void)
