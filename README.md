@@ -9,6 +9,20 @@ This is a photo gallery written using raylib as the API layer for reading in ima
 This is a set of source files written as a scene handler for apps using raylib; this library is only using the transition handling code.
 https://github.com/coochewgames/scene_handler
 
+## Building
+There has been some compilation shell scripts created to allow this to be built on different platforms.
+- `cc_linux.sh`
+- `cc_pi.sh` - To be utilised on Buster
+- `cc_pi_drm.sh` - To be utilised on Bullseye or later
+
+## Directory expectations
+Everything is expected to be within the same relative source directory:
+```
+./scene_handler/transition_handler.*
+./raylib/src/raylib.a
+./photo_gallery/*
+```
+
 # INI File
 The options to change the functionality of the photo gallery are set within a `photo_gallery.ini` file.
 
