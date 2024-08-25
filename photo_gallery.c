@@ -69,6 +69,8 @@ int main(int argc, char *argv[])
 
         if (strcmp(argv[1], "db") == 0)
         {
+            show_message("Loading files from db...");
+            
             files = read_files_from_file();
 
             if (files.file_count == 0)
