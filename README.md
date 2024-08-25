@@ -9,7 +9,7 @@ This is a photo gallery written using raylib as the API layer for reading in ima
 This is a set of source files written as a scene handler for apps using raylib; this library is only using the transition handling code.
 https://github.com/coochewgames/scene_handler
 
-## Building
+# Building
 There has been some compilation shell scripts created to allow this to be built on different platforms.
 - `cc_linux.sh`
 - `cc_pi.sh` - To be utilised on Buster
@@ -21,6 +21,22 @@ Everything is expected to be within the same relative source directory:
 ./scene_handler/transition_handler.*
 ./raylib/src/raylib.a
 ./photo_gallery/*
+```
+
+# Running
+Run the photo gallery from the command line using:
+```
+./photogallery [db]
+```
+
+## Building the photos db
+To speed up starting, a local `photos.db` cache file is used to store the paths to the photos played through by the gallery.
+
+When starting without any parameters, then the directory specified in the `photo_gallery.ini` file is scanned and the files found are written to the cache file.  If you wish to start using the cache file to avoid scanning each time, then use the parameter `db`.
+
+### Example for using cache file
+```
+./photogallery db
 ```
 
 # INI File

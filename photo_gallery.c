@@ -43,7 +43,6 @@ static void scale_image(Image *image);
 int main(int argc, char *argv[])
 {
     FILES files;
-    bool built_db = false;
 
     read_config_file();
 
@@ -68,34 +67,34 @@ int main(int argc, char *argv[])
             argv[1][i] = tolower(argv[1][i]);
         }
 
-        if (strcmp(argv[1], "build") == 0)
+        if (strcmp(argv[1], "db") == 0)
         {
-            files = build_photo_db(initial_dir);
+            files = read_files_from_file();
 
             if (files.file_count == 0)
             {
-                TraceLog(LOG_ERROR, "Unable to locate photos to build db in %s\nExiting...", initial_dir);
-                return 1;
+                TraceLog(LOG_WARNING, "Unable to read in photos from db");
             }
-
-            TraceLog(LOG_INFO, "%d photos found in %s", files.file_count, initial_dir);
-
-            write_files_to_file(&files);
-            built_db = true;
+            else
+            {
+                TraceLog(LOG_INFO, "%d photos found in db file", files.file_count);
+            }
         }
     }
 
-    if (built_db == false)
+    if (files.file_count == 0)
     {
-        files = read_files_from_file();
+        files = build_photo_db(initial_dir);
 
         if (files.file_count == 0)
         {
-            TraceLog(LOG_ERROR, "Unable to read in photos from db\nExiting...");
-            return 2;
+            TraceLog(LOG_ERROR, "Unable to locate photos to build db in %s\nExiting...", initial_dir);
+            return 1;
         }
 
-        TraceLog(LOG_INFO, "%d photos found in db file", files.file_count);
+        TraceLog(LOG_INFO, "%d photos found in %s", files.file_count, initial_dir);
+
+        write_files_to_file(&files);
     }
 
     while(run_loop(&files));
