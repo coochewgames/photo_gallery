@@ -11,6 +11,7 @@
 
 static int file_limit = 0;
 static int file_inc = 100;
+static const char *db_filename = "./photos.db";
 
 static void search_photos(FILES *files, const char *dir_path);
 static void add_path_name_to_files(FILES *files, const char *path_name);
@@ -25,7 +26,7 @@ FILES read_files_from_file()
     char path[PATH_MAX_LEN];
     int error_number = 0;
 
-    db_file = fopen("photos.db", "rt");
+    db_file = fopen(db_filename, "rt");
 
     while(fgets(path, PATH_MAX_LEN, db_file) != NULL)
     {
@@ -53,7 +54,7 @@ void write_files_to_file(FILES *files)
 {
     FILE *db_file;
 
-    db_file = fopen("photos.db", "wt");
+    db_file = fopen(db_filename, "wt");
 
     for(int pos = 0; pos < files->file_count; pos++)
     {

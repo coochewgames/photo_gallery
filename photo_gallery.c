@@ -78,6 +78,8 @@ int main(int argc, char *argv[])
                 return 1;
             }
 
+            TraceLog(LOG_INFO, "%d photos found in %s", files.file_count, initial_dir);
+
             write_files_to_file(&files);
             built_db = true;
         }
@@ -92,6 +94,8 @@ int main(int argc, char *argv[])
             TraceLog(LOG_ERROR, "Unable to read in photos from db\nExiting...");
             return 2;
         }
+
+        TraceLog(LOG_INFO, "%d photos found in db file", files.file_count);
     }
 
     while(run_loop(&files));
