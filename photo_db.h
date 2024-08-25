@@ -12,7 +12,11 @@ typedef struct
 } FILES;
 
 
+FILES read_files_from_file();
+void write_files_to_file(FILES *files);
+
 FILES build_photo_db(const char *dir_path);
+
 char *get_random_path_name(FILES *files);
 char *get_next_path_name(FILES *files);
 

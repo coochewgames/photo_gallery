@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include <ctype.h>
 #include <pthread.h>
 
 #include <transition_handler.h>
@@ -42,6 +43,7 @@ static void scale_image(Image *image);
 int main(int argc, char *argv[])
 {
     FILES files;
+    bool built_db = false;
 
     read_config_file();
 
@@ -58,12 +60,38 @@ int main(int argc, char *argv[])
     }
 
     init_raylib();
-    files = build_photo_db(initial_dir);
 
-    if (files.file_count == 0)
+    if (argc > 1)
     {
-        TraceLog(LOG_ERROR, "Unable to locate photos in %s\nExiting...", initial_dir);
-        return 1;
+        for(int i = 0; argv[1][i] != '\0'; i++)
+        {
+            argv[1][i] = tolower(argv[1][i]);
+        }
+
+        if (strcmp(argv[1], "build") == 0)
+        {
+            files = build_photo_db(initial_dir);
+
+            if (files.file_count == 0)
+            {
+                TraceLog(LOG_ERROR, "Unable to locate photos to build db in %s\nExiting...", initial_dir);
+                return 1;
+            }
+
+            write_files_to_file(&files);
+            built_db = true;
+        }
+    }
+
+    if (built_db == false)
+    {
+        files = read_files_from_file();
+
+        if (files.file_count == 0)
+        {
+            TraceLog(LOG_ERROR, "Unable to read in photos from db\nExiting...");
+            return 2;
+        }
     }
 
     while(run_loop(&files));

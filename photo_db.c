@@ -18,6 +18,51 @@ static const char *get_filename_ext(const char *file_name);
 static int is_ext_image(const char *ext);
 
 
+FILES read_files_from_file()
+{
+    FILES files = { NULL, 0, NO_VALUE };
+    FILE *db_file;
+    char path[PATH_MAX_LEN];
+    int error_number = 0;
+
+    db_file = fopen("photos.db", "rt");
+
+    while(fgets(path, PATH_MAX_LEN, db_file) != NULL)
+    {
+        if (strlen(path) > 0)
+        {
+            if (path[strlen(path) - 1] == '\n')
+            {
+                path[strlen(path) - 1] = '\0';
+            }
+
+            add_path_name_to_files(&files, path);
+        }
+    }
+
+    if ((error_number = ferror(db_file)) != 0)
+    {
+        printf("Error returned from reading paths from data file\n");
+    }
+
+    fclose(db_file);
+    return files;
+}
+
+void write_files_to_file(FILES *files)
+{
+    FILE *db_file;
+
+    db_file = fopen("photos.db", "wt");
+
+    for(int pos = 0; pos < files->file_count; pos++)
+    {
+        fprintf(db_file, "%s\n", files->files[pos]);
+    }
+
+    fclose(db_file);
+}
+
 FILES build_photo_db(const char *dir_path)
 {
     FILES files = { NULL, 0, NO_VALUE };
