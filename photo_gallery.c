@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
         if (strcmp(argv[1], "db") == 0)
         {
             show_message("Loading files from db...");
-            
+
             files = read_files_from_file();
 
             if (files.file_count == 0)
@@ -79,7 +79,11 @@ int main(int argc, char *argv[])
             }
             else
             {
-                TraceLog(LOG_INFO, "%d photos found in db file", files.file_count);
+                char message[256];
+
+                sprintf(message, "%d photos found in db file\nPre-loading initial image...", files.file_count);
+                TraceLog(LOG_INFO, message);
+                show_message(message);
             }
         }
     }
@@ -142,7 +146,7 @@ void show_message(const char *message)
 {
     BeginDrawing();
         ClearBackground(BLACK);
-        DrawText(message, 0, 0, 18, GREEN); 
+        DrawText(message, 0, 0, 32, GREEN); 
     EndDrawing();
 }
 
