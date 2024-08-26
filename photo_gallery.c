@@ -188,6 +188,7 @@ static bool run_loop(FILES *files)
 
         UnloadTexture(display_photo);
         display_photo = LoadTextureFromImage(scaled_image);
+        UnloadImage(scaled_image);
 
         next_photo();
 
