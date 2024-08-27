@@ -4,6 +4,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <pthread.h>
+#include <sys/time.h>
 
 #include <transition_handler.h>
 
@@ -38,6 +39,9 @@ static void next_photo(void);
 static bool show_photo(void);
 static void render_photo(void);
 static void scale_image(Image *image);
+
+static double get_delta_time(double start_time);
+static double get_current_time(void);
 
 
 int main(int argc, char *argv[])
@@ -176,7 +180,7 @@ static bool run_loop(FILES *files)
         }
     }
 
-    if (initial_run || (GetTime() - last_display_time) > display_time)
+    if (initial_run || get_delta_time(last_display_time) > display_time)
     {
         initial_run = false;
 
@@ -193,7 +197,7 @@ static bool run_loop(FILES *files)
         next_photo();
 
         is_next_image_loaded = false;
-        last_display_time = GetTime();
+        last_display_time = get_current_time();
 
         return true;
     }
@@ -230,10 +234,10 @@ static void *load_image(void *pfiles)
 
         if (image.data != NULL)
         {
-            double start = GetTime();
+            double start = get_current_time();
             TraceLog(LOG_DEBUG, "Starting resize...");
             scale_image(&image);
-            TraceLog(LOG_DEBUG, "Ending resize (%lf secs)", (GetTime() - start));
+            TraceLog(LOG_DEBUG, "Ending resize (%lf secs)", (get_delta_time(start)));
 
             scaled_image = image;
             image_loaded = true;
@@ -371,4 +375,17 @@ static void scale_image(Image *image)
     {
         ImageResize(image, dest_width, dest_height);
     }
+}
+
+static double get_delta_time(double start_time)
+{
+    return get_current_time() - start_time;
+}
+
+static double get_current_time(void)
+{
+    struct timeval start;
+
+    gettimeofday(&start, NULL);
+    return (double)start.tv_sec + ((double)start.tv_usec / 1000000.0);
 }
