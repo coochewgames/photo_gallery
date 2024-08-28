@@ -35,6 +35,7 @@ static double last_display_time = 0.0f;
 static char initial_dir[PATH_MAX_LEN];
 
 static void init_raylib(void);
+static FILES build_db(const char *initial_dir);
 static bool run_loop(FILES *files);
 static void *get_image(void *pfiles);
 static void next_photo(void);
@@ -76,6 +77,14 @@ int main(int argc, char *argv[])
             argv[1][i] = tolower(argv[1][i]);
         }
 
+        if (strcmp(argv[1], "build") == 0)
+        {
+            show_message("Building photos db file...");
+            (void)build_db(initial_dir);
+
+            exit(0);
+        }
+
         if (strcmp(argv[1], "db") == 0)
         {
             show_message("Loading files from db...");
@@ -99,21 +108,16 @@ int main(int argc, char *argv[])
 
     if (files.file_count == 0)
     {
-        files = build_photo_db(initial_dir);
-
-        if (files.file_count == 0)
-        {
-            TraceLog(LOG_ERROR, "Unable to locate photos to build db in %s\nExiting...", initial_dir);
-            return 1;
-        }
-
-        TraceLog(LOG_INFO, "%d photos found in %s", files.file_count, initial_dir);
-
-        write_files_to_file(&files);
+        show_message("Locating photos for display...");
+        files = build_db(initial_dir);
     }
 
-    while(run_loop(&files));
-    return 0;
+    if (files.file_count > 0)
+    {
+        while(run_loop(&files));
+    }
+
+    exit(0);
 }
 
 void set_display_type(DISPLAY_TYPE type)
@@ -163,6 +167,24 @@ static void init_raylib(void)
 {
     SetTraceLogLevel(LOG_INFO);
     InitWindow(display_width, display_height, "Photo Gallery");
+}
+
+static FILES build_db(const char *initial_dir)
+{
+    FILES files = build_photo_db(initial_dir);
+
+    if (files.file_count == 0)
+    {
+        TraceLog(LOG_ERROR, "Unable to locate photos to build db in %s\nExiting...", initial_dir);
+    }
+    else
+    {
+        TraceLog(LOG_INFO, "%d photos found in %s", files.file_count, initial_dir);
+
+        write_files_to_file(&files);
+    }
+
+    return files;
 }
 
 static bool run_loop(FILES *files)
