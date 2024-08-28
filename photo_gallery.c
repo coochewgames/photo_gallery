@@ -5,12 +5,14 @@
 #include <ctype.h>
 #include <pthread.h>
 #include <sys/time.h>
+#include <stdlib.h>
 
 #include <transition_handler.h>
 
 #include "photo_gallery.h"
 #include "photo_db.h"
 #include "set_config.h"
+#include "exif.h"
 
 #define DEFAULT_SCREEN_WIDTH 800
 #define DEFAULT_SCREEN_HEIGHT 600
@@ -34,7 +36,7 @@ static char initial_dir[PATH_MAX_LEN];
 
 static void init_raylib(void);
 static bool run_loop(FILES *files);
-static void *load_image(void *pfiles);
+static void *get_image(void *pfiles);
 static void next_photo(void);
 static bool show_photo(void);
 static void render_photo(void);
@@ -42,6 +44,9 @@ static void scale_image(Image *image);
 
 static double get_delta_time(double start_time);
 static double get_current_time(void);
+
+static Image load_image(const char *fileName);
+
 
 
 int main(int argc, char *argv[])
@@ -175,7 +180,7 @@ static bool run_loop(FILES *files)
     {
         if (is_loading_image == false)
         {
-            pthread_create(&thread_id, NULL, load_image, files);
+            pthread_create(&thread_id, NULL, get_image, files);
             is_loading_image = true;
         }
     }
@@ -205,7 +210,7 @@ static bool run_loop(FILES *files)
     return show_photo();
 }
 
-static void *load_image(void *pfiles)
+static void *get_image(void *pfiles)
 {
     FILES *files = (FILES *)pfiles;
     int num_attempts = 0;
@@ -230,7 +235,7 @@ static void *load_image(void *pfiles)
 
         //  A texture can be limited by the GPU, so load in as an image and scale prior to loading
         //  into the GPU as a texture.
-        image = LoadImage(file);
+        image = load_image(file);
 
         if (image.data != NULL)
         {
@@ -389,3 +394,32 @@ static double get_current_time(void)
     gettimeofday(&start, NULL);
     return (double)start.tv_sec + ((double)start.tv_usec / 1000000.0);
 }
+
+static Image load_image(const char *file_name)
+{
+    Image image = { 0 };
+    int rotation = 0;
+
+    unsigned int file_size = 0;
+    unsigned char *file_data = LoadFileData(file_name, &file_size);
+
+    if (file_data != NULL)
+    {
+        rotation = get_jpeg_rotation(file_data, file_size);
+        image = LoadImageFromMemory(GetFileExtension(file_name), file_data, file_size);
+    }
+
+    RL_FREE(file_data);
+
+    if (rotation == 90)
+    {
+        ImageRotateCW(&image);
+    }
+    else if (rotation == 270)
+    {
+        ImageRotateCCW(&image);
+    }
+
+    return image;
+}
+
