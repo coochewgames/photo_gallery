@@ -261,8 +261,9 @@ static void *get_image(void *pfiles)
 
         if (image.data != NULL)
         {
+            TraceLog(LOG_INFO, "Starting resize...");
+
             double start = get_current_time();
-            TraceLog(LOG_DEBUG, "Starting resize...");
             scale_image(&image);
             TraceLog(LOG_DEBUG, "Ending resize (%lf secs)", (get_delta_time(start)));
 
