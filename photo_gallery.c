@@ -427,7 +427,7 @@ static Image load_image(const char *file_name)
 
     if (file_data != NULL)
     {
-        rotation = get_jpeg_rotation(file_data, file_size);
+        rotation = get_exif_rotation(file_data, file_size);
         image = LoadImageFromMemory(GetFileExtension(file_name), file_data, file_size);
     }
 

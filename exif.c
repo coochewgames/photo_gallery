@@ -10,7 +10,7 @@ static const int EXIF_HEADER_LEN = 6;
 static unsigned short read_u16(const unsigned char* data, int big_endian);
 
 
-int get_jpeg_rotation(const unsigned char *file_data, unsigned int file_size)
+int get_exif_rotation(const unsigned char *file_data, unsigned int file_size)
 {
     unsigned int file_pos = 0;
 
