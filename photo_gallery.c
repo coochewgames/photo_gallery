@@ -433,12 +433,18 @@ static Image load_image(const char *file_name)
 
     RL_FREE(file_data);
 
-    if (rotation == 90)
+    if (rotation < 0)
     {
+        TraceLog(LOG_WARNING, "Error encountered parsing EXIF data (%d)", rotation);
+    }
+    else if (rotation == 90)
+    {
+        TraceLog(LOG_INFO, "Rotating image clockwise");
         ImageRotateCW(&image);
     }
     else if (rotation == 270)
     {
+        TraceLog(LOG_INFO, "Rotating image counter-clockwise");
         ImageRotateCCW(&image);
     }
 
