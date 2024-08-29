@@ -6,6 +6,7 @@
 
 static const int BUFFER_LEN = 2;
 static const int EXIF_HEADER_LEN = 6;
+static const int TIFF_HEADER_LEN = 8;
 
 static unsigned short read_u16(const unsigned char* data, int big_endian);
 
@@ -47,6 +48,13 @@ int get_exif_rotation(const unsigned char *file_data, unsigned int file_size)
             file_pos += BUFFER_LEN;
 
             unsigned short length = read_u16(buffer, 1);
+
+            if (file_pos + (length - BUFFER_LEN) > file_size)
+            {
+                fprintf(stderr, "Unexpected end of file while reading EXIF data\n");
+                return -3;
+            }
+
             unsigned char *exif_data = (unsigned char*)malloc(length);
             int rotation = -1;
 
@@ -69,6 +77,14 @@ int get_exif_rotation(const unsigned char *file_data, unsigned int file_size)
 
                 unsigned int offset = read_u16(exif_data + exif_pos, big_endian);
                 unsigned int num_entries = read_u16(exif_data + EXIF_HEADER_LEN + offset, big_endian);
+
+                if (EXIF_HEADER_LEN + offset + BUFFER_LEN + (num_entries * 12) > length)
+                {
+                    free(exif_data);
+
+                    fprintf(stderr, "Invalid number of EXIF entries or corrupted data\n");
+                    return -5;
+                }
 
                 for (unsigned int i = 0; i < num_entries; ++i)
                 {
@@ -116,10 +132,10 @@ int get_exif_rotation(const unsigned char *file_data, unsigned int file_size)
     }
 
     fprintf(stderr, "No EXIF orientation tag found\n");
-    return -5;
+    return -6;
 }
 
-static unsigned short read_u16(const unsigned char* data, int big_endian)
+static unsigned short read_u16(const unsigned char *data, int big_endian)
 {
     return (big_endian) ? (data[0] << 8) | data[1] : (data[1] << 8) | data[0];
 }
