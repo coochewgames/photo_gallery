@@ -272,6 +272,7 @@ static void *get_image(void *pfiles)
         else
         {
             num_attempts++;
+            TraceLog(LOG_INFO, "Unable to load image, attempt %d: %s", num_attempts, file);
         }
     } while (image_loaded == false && num_attempts < num_attempts_to_find_valid_photo);
 
