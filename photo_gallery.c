@@ -202,8 +202,8 @@ static bool run_loop(FILES *files)
     {
         if (is_loading_image == false)
         {
-            pthread_create(&thread_id, NULL, get_image, files);
             is_loading_image = true;
+            pthread_create(&thread_id, NULL, get_image, files);
         }
     }
 
@@ -215,6 +215,12 @@ static bool run_loop(FILES *files)
         {
             TraceLog(LOG_INFO, "Awaiting image loading...");
             pthread_join(thread_id, NULL);
+        }
+
+        if (scaled_image.data == NULL)
+        {
+            TraceLog(LOG_FATAL, "Unable to load in an image with %d attempts", num_attempts_to_find_valid_photo);
+            return false;
         }
 
         UnloadTexture(display_photo);
@@ -261,13 +267,6 @@ static void *get_image(void *pfiles)
 
         if (image.data != NULL)
         {
-            TraceLog(LOG_INFO, "Starting resize...");
-
-            double start = get_current_time();
-            scale_image(&image);
-            TraceLog(LOG_INFO, "Resize complete (%lf secs)", (get_delta_time(start)));
-
-            scaled_image = image;
             image_loaded = true;
         }
         else
@@ -276,7 +275,22 @@ static void *get_image(void *pfiles)
         }
     } while (image_loaded == false && num_attempts < num_attempts_to_find_valid_photo);
 
-    is_next_image_loaded = true;
+    if (image_loaded == true)
+    {
+        TraceLog(LOG_INFO, "Starting resize...");
+
+        double start = get_current_time();
+        scale_image(&image);
+        TraceLog(LOG_INFO, "Resize complete (%lf secs)", (get_delta_time(start)));
+
+        scaled_image = image;
+        is_next_image_loaded = true;
+    }
+    else
+    {
+        is_next_image_loaded = false;
+    }
+
     is_loading_image = false;
 
     pthread_exit(NULL);
