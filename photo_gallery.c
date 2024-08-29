@@ -265,7 +265,7 @@ static void *get_image(void *pfiles)
 
             double start = get_current_time();
             scale_image(&image);
-            TraceLog(LOG_DEBUG, "Ending resize (%lf secs)", (get_delta_time(start)));
+            TraceLog(LOG_INFO, "Resize complete (%lf secs)", (get_delta_time(start)));
 
             scaled_image = image;
             image_loaded = true;
