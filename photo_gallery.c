@@ -4,6 +4,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <pthread.h>
+#include <unistd.h>
 #include <sys/time.h>
 #include <stdlib.h>
 
@@ -26,8 +27,9 @@ static GET_TYPE get_type = GET_RANDOM_PHOTO;
 static double display_time = DEFAULT_DISPLAY_TIME;
 static int num_attempts_to_find_valid_photo = 5;
 
-static bool is_loading_image = false;
-static bool is_next_image_loaded = false;
+static volatile bool is_next_image_loaded = false;
+static volatile bool is_loading_image = false;
+static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 static Image scaled_image;
 
 static Texture2D display_photo;
@@ -112,11 +114,14 @@ int main(int argc, char *argv[])
         files = build_db(initial_dir);
     }
 
+    pthread_mutex_init(&mutex, NULL);
+
     if (files.file_count > 0)
     {
         while(run_loop(&files));
     }
 
+    pthread_mutex_destroy(&mutex);
     exit(0);
 }
 
@@ -204,6 +209,12 @@ static bool run_loop(FILES *files)
         {
             is_loading_image = true;
             pthread_create(&thread_id, NULL, get_image, files);
+
+            if (initial_run)
+            {
+                //  This is to ensure that the lock is picked up by the thread on the initial run
+                sleep(1);
+            }
         }
     }
 
@@ -214,10 +225,12 @@ static bool run_loop(FILES *files)
         if (is_loading_image == true)
         {
             TraceLog(LOG_INFO, "Awaiting image loading...");
-            pthread_join(thread_id, NULL);
+            
+            pthread_mutex_lock(&mutex);
+            pthread_mutex_unlock(&mutex);
         }
 
-        if (scaled_image.data == NULL)
+        if (is_next_image_loaded == false)
         {
             TraceLog(LOG_FATAL, "Unable to load in an image with %d attempts", num_attempts_to_find_valid_photo);
             return false;
@@ -240,6 +253,8 @@ static bool run_loop(FILES *files)
 
 static void *get_image(void *pfiles)
 {
+    pthread_mutex_lock(&mutex);
+
     FILES *files = (FILES *)pfiles;
     int num_attempts = 0;
     bool image_loaded = false;
@@ -294,6 +309,7 @@ static void *get_image(void *pfiles)
 
     is_loading_image = false;
 
+    pthread_mutex_unlock(&mutex);
     pthread_exit(NULL);
 }
 
