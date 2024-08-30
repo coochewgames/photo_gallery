@@ -3,7 +3,6 @@
 #include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
-#include <pthread.h>
 #include <sys/time.h>
 #include <stdlib.h>
 
@@ -188,7 +187,6 @@ static FILES build_db(const char *initial_dir)
 
 static bool run_loop(FILES *files)
 {
-    static pthread_t thread_id;
     static bool initial_run = true;
 
     if (is_transition_active())
