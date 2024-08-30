@@ -4,7 +4,6 @@
 #include <string.h>
 #include <ctype.h>
 #include <pthread.h>
-#include <unistd.h>
 #include <sys/time.h>
 #include <stdlib.h>
 
@@ -27,9 +26,7 @@ static GET_TYPE get_type = GET_RANDOM_PHOTO;
 static double display_time = DEFAULT_DISPLAY_TIME;
 static int num_attempts_to_find_valid_photo = 5;
 
-static volatile bool is_next_image_loaded = false;
-static volatile bool is_loading_image = false;
-static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+static bool is_next_image_loaded = false;
 static Image scaled_image;
 
 static Texture2D display_photo;
@@ -39,7 +36,7 @@ static char initial_dir[PATH_MAX_LEN];
 static void init_raylib(void);
 static FILES build_db(const char *initial_dir);
 static bool run_loop(FILES *files);
-static void *get_image(void *pfiles);
+static bool get_image(void *pfiles);
 static void next_photo(void);
 static bool show_photo(void);
 static void render_photo(void);
@@ -114,14 +111,11 @@ int main(int argc, char *argv[])
         files = build_db(initial_dir);
     }
 
-    pthread_mutex_init(&mutex, NULL);
-
     if (files.file_count > 0)
     {
         while(run_loop(&files));
     }
 
-    pthread_mutex_destroy(&mutex);
     exit(0);
 }
 
@@ -205,36 +199,16 @@ static bool run_loop(FILES *files)
 
     if (is_next_image_loaded == false)
     {
-        if (is_loading_image == false)
+        if ((is_next_image_loaded = get_image(files)) == false)
         {
-            is_loading_image = true;
-            pthread_create(&thread_id, NULL, get_image, files);
-
-            if (initial_run)
-            {
-                //  This is to ensure that the lock is picked up by the thread on the initial run
-                sleep(1);
-            }
+            TraceLog(LOG_FATAL, "Unable to load in an image with %d attempts", num_attempts_to_find_valid_photo);
+            return false;
         }
     }
 
     if (initial_run || get_delta_time(last_display_time) > display_time)
     {
         initial_run = false;
-
-        if (is_loading_image == true)
-        {
-            TraceLog(LOG_INFO, "Awaiting image loading...");
-            
-            pthread_mutex_lock(&mutex);
-            pthread_mutex_unlock(&mutex);
-        }
-
-        if (is_next_image_loaded == false)
-        {
-            TraceLog(LOG_FATAL, "Unable to load in an image with %d attempts", num_attempts_to_find_valid_photo);
-            return false;
-        }
 
         UnloadTexture(display_photo);
         display_photo = LoadTextureFromImage(scaled_image);
@@ -251,10 +225,8 @@ static bool run_loop(FILES *files)
     return show_photo();
 }
 
-static void *get_image(void *pfiles)
+static bool get_image(void *pfiles)
 {
-    pthread_mutex_lock(&mutex);
-
     FILES *files = (FILES *)pfiles;
     int num_attempts = 0;
     bool image_loaded = false;
@@ -276,8 +248,6 @@ static void *get_image(void *pfiles)
                 break;
         }
 
-        //  A texture can be limited by the GPU, so load in as an image and scale prior to loading
-        //  into the GPU as a texture.
         image = load_image(file);
 
         if (image.data != NULL)
@@ -293,6 +263,8 @@ static void *get_image(void *pfiles)
 
     if (image_loaded == true)
     {
+        //  A texture can be limited by the GPU, so load in as an image and scale prior to loading
+        //  into the GPU as a texture.
         TraceLog(LOG_INFO, "Starting resize...");
 
         double start = get_current_time();
@@ -300,17 +272,9 @@ static void *get_image(void *pfiles)
         TraceLog(LOG_INFO, "Resize complete (%lf secs)", (get_delta_time(start)));
 
         scaled_image = image;
-        is_next_image_loaded = true;
-    }
-    else
-    {
-        is_next_image_loaded = false;
     }
 
-    is_loading_image = false;
-
-    pthread_mutex_unlock(&mutex);
-    pthread_exit(NULL);
+    return image_loaded;
 }
 
 static void next_photo(void)
