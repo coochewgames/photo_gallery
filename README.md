@@ -26,13 +26,18 @@ Everything is expected to be within the same relative source directory:
 # Running
 Run the photo gallery from the command line using:
 ```
-./photogallery [db]
+./photogallery [db build]
 ```
 
 ## Building the photos db
 To speed up starting, a local `photos.db` cache file is used to store the paths to the photos played through by the gallery.
 
 When starting without any parameters, then the directory specified in the `photo_gallery.ini` file is scanned and the files found are written to the cache file.  If you wish to start using the cache file to avoid scanning each time, then use the parameter `db`.
+
+### Build the photos db then exit
+```
+./photogallery build
+```
 
 ### Example for using cache file
 ```
@@ -81,7 +86,7 @@ display_time=10
 ### Notes
 This time is inclusive of the transition time.  Importantly, the processing time required to scale and image to the display height and width is CPU intensive and can affect the transitioning if this is time is too short.
 
-On a Pi Zero, an image of 4000x3000 works best when there is at least 40 seconds of display time if the transitions are to be seen properly.  Using a Pi Zero 2, it can complete in around 15 seconds.
+On a Pi Zero, an image of 4000x3000 works best when there is at least 20 seconds of display time if the transitions are to be seen properly.  Using a Pi Zero 2, it can complete in around 5 to 10 seconds.
 
 ## Transition duration
 This is the transition duration, which is inclusive of the display time.
@@ -116,4 +121,5 @@ initial_dir=./photos
 The raylib build used will have to ensure that JPG file line have been uncommented in the `config.h` file.  If using an earlier version of raylib (for example, 4.2), the case of the filename extension can entail that the image data will not be properly processed.
 
 # TODO
-Saving the image files found in the scanned directories to improve the starting up time.
+Seems that some photos *have* been taken upside down :-)
+Will update the rotation to include 180 degrees.
