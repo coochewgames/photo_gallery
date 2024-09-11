@@ -121,5 +121,3 @@ initial_dir=./photos
 The raylib build used will have to ensure that JPG file line have been uncommented in the `config.h` file.  If using an earlier version of raylib (for example, 4.2), the case of the filename extension can entail that the image data will not be properly processed.
 
 # TODO
-Seems that some photos *have* been taken upside down :-)
-Will update the rotation to include 180 degrees.

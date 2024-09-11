@@ -436,6 +436,11 @@ static Image load_image(const char *file_name)
         TraceLog(LOG_INFO, "Rotating image clockwise");
         ImageRotateCW(&image);
     }
+    else if (rotation == 180)
+    {
+        TraceLog(LOG_INFO, "Flipping image");
+        ImageFlipVertical(&image);
+    }
     else if (rotation == 270)
     {
         TraceLog(LOG_INFO, "Rotating image counter-clockwise");
